@@ -64,7 +64,7 @@ public class AuthEndpoint {
     }
 
     @GET
-    @Path("/user-info/{adUser : (\\w+)?}")
+    @Path("/user-info{adUser : (/adUser)?}")
     @RolesAllowed({"Users"})
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUserInfo(@PathParam("adUser") String adUser) {
@@ -76,7 +76,7 @@ public class AuthEndpoint {
         }
         try {
             User user = activeDirectory.getUser(username);
-            return Response.ok(user, MediaType.APPLICATION_JSON).build();
+            return Response.ok(user).build();
         } catch (NamingException ex) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
