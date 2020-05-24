@@ -7,6 +7,7 @@ import org.baco.adidentity.ad.ActiveDirectoryConfiguration;
 import org.baco.adidentity.ad.User;
 import org.baco.adidentity.jwt.JWTConfig;
 import org.baco.adidentity.jwt.JWTUtils;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -17,10 +18,7 @@ import javax.naming.ldap.LdapContext;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Path("/auth")
 @RequestScoped
@@ -124,7 +122,20 @@ public class AuthEndpoint {
         }
     }
 
+    /**
+     * Gets a Signed JWT String token with AD common parameters as claims
+     * @param username
+     * @param userPrincipal
+     * @param name
+     * @param department
+     * @param title
+     * @return
+     * @throws Exception
+     */
     private String getSignedJWT(String username, String userPrincipal, String name, String department, String title) throws Exception {
+        Optional<String> issuerConfig = ConfigProvider.getConfig().getOptionalValue(JWTConfig.ISSUER_CONFIG, String.class);
+        String issuer = issuerConfig.orElse("baco.adidentity");
+
         Calendar expiry = Calendar.getInstance();
         expiry.add(Calendar.HOUR, 24);
         // Generate JWT Token
@@ -135,11 +146,10 @@ public class AuthEndpoint {
                 .claim("department", department)
                 .claim("title", title)
                 .groups("Users") // Add bearer Group
-                .issuer(jwtConfig.getIssuer())
+                .issuer(issuer)
                 .expiresAt(expiry.getTimeInMillis()/1000);
         // Sign JWT Token
-        String jwtString = claimBuilder.jws().signatureKeyId(jwtConfig.getSignatureId()).sign(JWTUtils.getPrivateKey());
-        return jwtString;
+        return claimBuilder.jws().signatureKeyId(jwtConfig.getSignatureId()).sign(JWTUtils.getPrivateKey());
     }
 
 }

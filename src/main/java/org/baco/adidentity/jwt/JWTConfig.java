@@ -19,9 +19,7 @@ public interface JWTConfig {
 
     static String PRIVATE_KEY_CONFIG = "security.jwt.privatekey";
     static String DEFAULT_PRIVATE_KEY_CONFIG = "security.jwt.defaultprivatekey";
-
-    @ConfigProperty(name = "issuer")
-    String getIssuer();
+    static String ISSUER_CONFIG = "mp.jwt.verify.issuer";
 
     @ConfigProperty(name = "signatureid")
     String getSignatureId();
