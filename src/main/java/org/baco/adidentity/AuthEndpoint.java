@@ -105,6 +105,7 @@ public class AuthEndpoint {
         Set<String> claimNames = jwt.getClaimNames();
         Map<String, Object> claimMap = new HashMap<>();
         claimNames.stream().forEach(c -> claimMap.put(c, jwt.getClaim(c)));
+        claimMap.remove("raw_token");
         return Response.ok(claimMap).build();
     }
 
