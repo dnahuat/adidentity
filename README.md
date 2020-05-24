@@ -6,9 +6,6 @@ It implements the JWT ( RFC 7519 ) for token generation with verifying operation
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework ( https://quarkus.io/ )
 
-## Configuration
-
-
 
 ## Running the application in dev mode
 
@@ -46,6 +43,25 @@ You can then execute your native executable with: `./target/adidentity-1.0-SNAPS
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
 
+## Generate and push docker image
+
+You'll need to have docker installed.
+
+Use the following command to generate a docker image:
+```
+./mvnw clean package -Dquarkus.container-image.build=true
+```
+
+Use following command to generate and push a docker image:
+```
+./mvnw clean package -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.password=<registrypassword>
+```
+
+Or to generate and push a native image:
+```
+./mvnw clean package -Pnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.password=<registrypassword>
+```
+
 ## Useful commands (Quick Guide)
 
 ### Extension listing
@@ -57,3 +73,5 @@ mvnw quarkus:list-extensions
 ```
 mvnw quarkus:add-extension -Dextensions="quarkus-jdbc-postgresl"
 ```
+
+quarkus-resteasy-jsonb
