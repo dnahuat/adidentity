@@ -70,13 +70,17 @@ public class AuthEndpoint {
     public Response getUserInfo(@PathParam("adUser") String adUser) {
         String username = null;
         if(adUser != null && !adUser.trim().isEmpty()) {
-            username = adUser.trim();
+            username = adUser.replaceFirst("/","").trim();
         } else {
             username = jwt.getClaim("username");
         }
         try {
             User user = activeDirectory.getUser(username);
-            return Response.ok(user).build();
+            if(user != null) {
+                return Response.ok(user).build();
+            } else {
+                return Response.status(Response.Status.NOT_FOUND).build();
+            }
         } catch (NamingException ex) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
