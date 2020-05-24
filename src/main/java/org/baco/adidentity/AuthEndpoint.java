@@ -8,7 +8,6 @@ import org.baco.adidentity.ad.User;
 import org.baco.adidentity.jwt.JWTConfig;
 import org.baco.adidentity.jwt.JWTUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.enterprise.context.RequestScoped;
@@ -52,22 +51,9 @@ public class AuthEndpoint {
                 LdapContext adContext = activeDirectory.getConnection(username.trim(), password.trim());
                 User user = activeDirectory.getUser(adContext, username.trim());
                 adContext.close();
-                Calendar expiry = Calendar.getInstance();
-                expiry.add(Calendar.HOUR, 72);
-                // Generate JWT Token
-                JwtClaimsBuilder claimBuilder = Jwt.claims();
-                claimBuilder.claim("username", username.trim())
-                        .claim("userPrincipal", user.getUserPrincipal())
-                        .claim("name", user.getName())
-                        .claim("department", user.getDepartment())
-                        .claim("title", user.getTitle())
-                        .groups("Users") // Add bearer Group
-                        .issuer(jwtConfig.getIssuer())
-                        .expiresAt(expiry.getTimeInMillis()/1000);
-                // Sign JWT Token
                 try {
-                    String jwtString = claimBuilder.jws().signatureKeyId(jwtConfig.getSignatureId()).sign(JWTUtils.getPrivateKey());
-                    return Response.ok(jwtString, MediaType.TEXT_PLAIN).build();
+                    String signedJWT = getSignedJWT(username.trim(), user.getUserPrincipal(), user.getName(), user.getDepartment(), user.getTitle());
+                    return Response.ok(signedJWT).build();
                 } catch (Exception ex) {
                     return Response.serverError().build();
                 }
@@ -107,6 +93,53 @@ public class AuthEndpoint {
         claimNames.stream().forEach(c -> claimMap.put(c, jwt.getClaim(c)));
         claimMap.remove("raw_token");
         return Response.ok(claimMap).build();
+    }
+
+    @POST
+    @Path("/refresh")
+    @RolesAllowed({"Users"})
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response refresh() {
+        Long expirationTime = jwt.getExpirationTime();
+        /**
+         * Verify expiration
+         */
+        Calendar now = Calendar.getInstance();
+        Long curTime = now.getTimeInMillis()/1000;
+        Long diff = expirationTime - curTime;
+
+        if(diff < 0 || diff >= 600) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+        String username = jwt.getClaim("username");
+        String userPrincipal = jwt.getClaim("userPrincipal");
+        String name = jwt.getClaim("name");
+        String department = jwt.getClaim("department");
+        String title = jwt.getClaim("title");
+        try {
+            String signedJWT = getSignedJWT(username, userPrincipal, name, department, title);
+            return Response.ok(signedJWT).build();
+        } catch (Exception ex) {
+            return Response.serverError().build();
+        }
+    }
+
+    private String getSignedJWT(String username, String userPrincipal, String name, String department, String title) throws Exception {
+        Calendar expiry = Calendar.getInstance();
+        expiry.add(Calendar.HOUR, 24);
+        // Generate JWT Token
+        JwtClaimsBuilder claimBuilder = Jwt.claims();
+        claimBuilder.claim("username", username)
+                .claim("userPrincipal", userPrincipal)
+                .claim("name", name)
+                .claim("department", department)
+                .claim("title", title)
+                .groups("Users") // Add bearer Group
+                .issuer(jwtConfig.getIssuer())
+                .expiresAt(expiry.getTimeInMillis()/1000);
+        // Sign JWT Token
+        String jwtString = claimBuilder.jws().signatureKeyId(jwtConfig.getSignatureId()).sign(JWTUtils.getPrivateKey());
+        return jwtString;
     }
 
 }
