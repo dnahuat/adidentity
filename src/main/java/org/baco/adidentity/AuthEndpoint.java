@@ -41,7 +41,7 @@ public class AuthEndpoint {
     @POST
     @Path("/login")
     @PermitAll
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public Response login(@HeaderParam("username") String username, @HeaderParam("password") String password) {
         if(username != null && !username.trim().isEmpty() && password != null && !password.trim().isEmpty()) {
             try {
