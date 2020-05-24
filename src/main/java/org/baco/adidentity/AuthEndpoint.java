@@ -64,7 +64,7 @@ public class AuthEndpoint {
     }
 
     @GET
-    @Path("/user-info{adUser : (/adUser)?}")
+    @Path("/user-info{adUser : (/.+)?}")
     @RolesAllowed({"Users"})
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUserInfo(@PathParam("adUser") String adUser) {
