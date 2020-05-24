@@ -68,17 +68,18 @@ public class AuthEndpoint {
     @RolesAllowed({"Users"})
     @Produces(MediaType.APPLICATION_JSON)
     public Response getUserInfo(@PathParam("adUser") String adUser) {
+        String username = null;
         if(adUser != null && !adUser.trim().isEmpty()) {
-            try {
-                User user = activeDirectory.getUser(adUser);
-                return Response.ok(user, MediaType.APPLICATION_JSON).build();
-            } catch (NamingException ex) {
-                return Response.status(Response.Status.NOT_FOUND).build();
-            }
+            username = adUser.trim();
         } else {
-            return Response.status(Response.Status.BAD_REQUEST).build();
+            username = jwt.getClaim("username");
         }
-
+        try {
+            User user = activeDirectory.getUser(username);
+            return Response.ok(user, MediaType.APPLICATION_JSON).build();
+        } catch (NamingException ex) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
     }
 
     @POST
